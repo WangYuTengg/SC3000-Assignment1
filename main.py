@@ -163,9 +163,9 @@ def main():
     shortest_distance, shortest_path, energy_cost = dijkstra(
         combined_graph, start_node, target_node
     )
-    print("Shortest path:", "->".join(shortest_path))
-    print(f"Shortest distance: {shortest_distance}")
-    print(f"Total Energy Cost: {energy_cost}")
+    print("Shortest path:", "->".join(shortest_path) + ".")
+    print(f"Shortest distance: {shortest_distance}.")
+    print(f"Total energy cost: {energy_cost}.")
 
     # Task 2
     print("\n" + "=" * 5 + " Task 2 " + "=" * 5)
@@ -173,9 +173,9 @@ def main():
         combined_graph, start_node, target_node, energy_budget
     )
     if shortest_path:
-        print("Shortest path within energy constraint:", "->".join(shortest_path))
-        print(f"Total Distance Traveled: {shortest_distance}")
-        print(f"Total Energy Cost: {total_energy_cost}")
+        print("Shortest path:", "->".join(shortest_path) + ".")
+        print(f"Shortest distance: {shortest_distance}.")
+        print(f"Total energy cost: {total_energy_cost}.")
     else:
         print("No path found within the given energy constraint.")
 
