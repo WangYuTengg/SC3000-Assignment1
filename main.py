@@ -1,6 +1,7 @@
 # Import necessary libraries and packages
 import json
 import heapq
+import math
 
 
 def load_json_file(filename):
@@ -140,6 +141,93 @@ def ucs_with_energy_constraint(graph, start, target, energy_budget):
     return None, None, None
 
 
+def get_displacement(Coord, node_from, node_to):
+    """
+    Function to get the displacement between two nodes
+    Parameters:
+        node_from: node from which the displacement is calculated
+        node_to: node to which the displacement is calculated
+    """
+    node_from_x, node_from_y = Coord[node_from]
+    node_to_x, node_to_y = Coord[node_to]
+    d = math.sqrt(
+        pow(abs(node_from_x - node_to_x), 2) + pow(abs(node_from_y - node_to_y), 2)
+    )
+    return d
+
+
+def a_star_search(graph, start, target, energy_budget, coord, h_factor=1):
+    """
+    Function to run A* search algorithm with energy constraint (task 3)
+    Parameters:
+        graph: combined graph of the nodes, distances and costs
+        start: start node
+        target: target node
+        energy_budget: maximum energy budget
+        coord: dictionary of coordinates of each node
+        h_factor: factor to multiply heuristic by
+    """
+    # Initialize costs and visited set
+    visited = set()
+    g = {node: float("infinity") for node in graph}  # Distance from start to node
+    h = {node: float("infinity") for node in graph}  # g + heuristic
+    predecessors = {node: None for node in graph}  # Keep track of path
+    energy_costs = {
+        node: float("infinity") for node in graph
+    }  # Energy cost from start to node
+
+    g[start] = 0
+    h[start] = get_displacement(coord, start, target)
+    energy_costs[start] = 0
+
+    # Each item in the priority queue is (estimated_cost_to_goal, cost_from_start, node, energy_cost)
+    priority_queue = [(h[start], g[start], start, energy_costs[start])]
+
+    while priority_queue:
+        _, current_cost, current_node, current_energy = heapq.heappop(priority_queue)
+
+        if current_node in visited:
+            continue
+
+        visited.add(current_node)
+
+        if current_node == target:
+            # Reconstruct path from start to target
+            path = []
+            while current_node:
+                path.append(current_node)
+                current_node = predecessors[current_node]
+            path.reverse()
+            return path, current_cost, current_energy
+
+        for neighbor in graph[current_node]:
+            tentative_g = current_cost + neighbor["distance"]  # g(n)
+            tentative_energy = current_energy + neighbor["cost"]  # energy cost
+
+            if neighbor["node"] not in visited and tentative_energy <= energy_budget:
+                if tentative_g < g[neighbor["node"]]:
+                    g[neighbor["node"]] = tentative_g
+                    energy_costs[neighbor["node"]] = tentative_energy
+                    # f(n) = g(n) + h(n)
+                    h[neighbor["node"]] = (
+                        tentative_g
+                        + get_displacement(coord, neighbor["node"], target) * h_factor
+                    )
+                    predecessors[neighbor["node"]] = current_node
+                    heapq.heappush(
+                        priority_queue,
+                        (
+                            h[neighbor["node"]],
+                            g[neighbor["node"]],
+                            neighbor["node"],
+                            energy_costs[neighbor["node"]],
+                        ),
+                    )
+
+    # No path found within energy constraint
+    return None, None, None
+
+
 def main():
     """
     Function to run main program
@@ -181,6 +269,15 @@ def main():
 
     # Task 3
     print("\n" + "=" * 5 + " Task 3 " + "=" * 5)
+    shortest_path, shortest_distance, total_energy_cost = a_star_search(
+        combined_graph, start_node, target_node, energy_budget, Coord
+    )
+    if shortest_path:
+        print("Shortest path:", "->".join(shortest_path) + ".")
+        print(f"Shortest distance: {shortest_distance}.")
+        print(f"Total energy cost: {total_energy_cost}.")
+    else:
+        print("No path found within the given energy constraint.")
 
 
 if __name__ == "__main__":
